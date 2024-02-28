@@ -1,14 +1,13 @@
 package main
 
 import (
-	"bytes"
 	"device/sam"
 	"fmt"
 	"machine"
 	"runtime/interrupt"
 	"runtime/volatile"
 	"time"
-	neopixel_spi "uc-go/pkg/neopixel-spi"
+	"uc-go/app/neopixel-spi/driver"
 )
 
 var (
@@ -28,6 +27,9 @@ func spiInterruptHandler(i interrupt.Interrupt) {
 func main() {
 	spi = &machine.SPI{Bus: sam.SERCOM5_SPIM, SERCOM: 5}
 
+	d := &driver.NeoSpiDriver{}
+	d.Init()
+
 	err := spi.Configure(machine.SPIConfig{
 		Frequency: 2_400_000,
 		SCK:       machine.PA22, // 5.1 (sercom alt)
@@ -45,52 +47,23 @@ func main() {
 		forever(err)
 	}
 
-	g := neopixel_spi.ExpandBits([]byte{0x40, 0, 0})
-	r := neopixel_spi.ExpandBits([]byte{0, 0x40, 0})
-	b := neopixel_spi.ExpandBits([]byte{0, 0, 0x40})
-	c := neopixel_spi.ExpandBits([]byte{0, 0, 0})
-
-	space := bytes.Repeat([]byte{0}, 1000)
-
-	var buf []byte
-	buf = append(buf, space...)
-
-	buf = append(buf, c...)
-
-	buf = append(buf, g...)
-	buf = append(buf, g...)
-	buf = append(buf, g...)
-
-	buf = append(buf, c...)
-
-	buf = append(buf, b...)
-	buf = append(buf, b...)
-
-	buf = append(buf, c...)
-
-	buf = append(buf, r...)
-
-	buf = append(buf, c...)
-
-	buf = append(buf, space...)
-
 	for {
-		loop(buf)
+		loop(d)
 		fmt.Println("hello", volatile.LoadUint8(&interruptCount))
 	}
 
 }
 
-func loop(buf []byte) {
+func loop(d *driver.NeoSpiDriver) {
 	i := 0
 	count := 100
 	for count > 0 {
 		for !spi.Bus.INTFLAG.HasBits(sam.SERCOM_SPIM_INTFLAG_DRE) {
 		}
-		val := buf[i]
+		val := d.Buf[i]
 		spi.Bus.DATA.Set(uint32(val))
 		i++
-		if i >= len(buf) {
+		if i >= len(d.Buf) {
 			i = 0
 			count--
 		}
