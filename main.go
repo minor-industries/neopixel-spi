@@ -43,6 +43,8 @@ func main() {
 	var buf []byte
 	buf = append(buf, space...)
 
+	buf = append(buf, c...)
+
 	buf = append(buf, g...)
 	buf = append(buf, g...)
 	buf = append(buf, g...)
@@ -51,6 +53,8 @@ func main() {
 
 	buf = append(buf, b...)
 	buf = append(buf, b...)
+
+	buf = append(buf, c...)
 
 	buf = append(buf, r...)
 
@@ -58,11 +62,20 @@ func main() {
 
 	buf = append(buf, space...)
 
+	i := 0
 	for {
-		err := spi.Tx(buf, nil)
-		if err != nil {
-			forever(err)
+		for !spi.Bus.INTFLAG.HasBits(sam.SERCOM_SPIM_INTFLAG_DRE) {
 		}
+		val := buf[i]
+		spi.Bus.DATA.Set(uint32(val))
+		i++
+		if i >= len(buf) {
+			i = 0
+		}
+		//err := spi.Tx(buf, nil)
+		//if err != nil {
+		//	forever(err)
+		//}
 	}
 }
 
