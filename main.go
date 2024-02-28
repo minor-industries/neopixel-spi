@@ -32,7 +32,7 @@ func main() {
 	}
 
 	for range time.NewTicker(30 * time.Millisecond).C {
-		err := spi.Tx([]byte{0x05}, nil)
+		err := spi.Tx([]byte{0x00, 0x05, 0x00}, nil)
 		if err != nil {
 			forever(err)
 		}
