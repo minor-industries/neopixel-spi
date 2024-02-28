@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"device/sam"
 	"fmt"
 	"machine"
 	"time"
+	neopixel_spi "uc-go/pkg/neopixel-spi"
 )
 
 var (
@@ -24,15 +26,25 @@ func main() {
 		SCK:       machine.PA22, // 5.1 (sercom alt)
 		SDO:       machine.PA23, // 5.0 (sercom alt)
 		SDI:       machine.PA20, // 5.2 (sercom alt)
-		LSBFirst:  false,
+		LSBFirst:  true,
 		Mode:      0,
 	})
 	if err != nil {
 		forever(err)
 	}
 
+	expanded := neopixel_spi.ExpandBits([]byte{0xFF, 0xFF, 0xFF})
+
+	space := bytes.Repeat([]byte{0}, 1000)
+
+	var buf []byte
+	buf = append(buf, space...)
+	buf = append(buf, expanded...)
+	buf = append(buf, expanded...)
+	buf = append(buf, space...)
+
 	for range time.NewTicker(30 * time.Millisecond).C {
-		err := spi.Tx([]byte{0x00, 0x05, 0x00}, nil)
+		err := spi.Tx(buf, nil)
 		if err != nil {
 			forever(err)
 		}
