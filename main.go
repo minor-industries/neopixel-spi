@@ -33,17 +33,32 @@ func main() {
 		forever(err)
 	}
 
-	expanded := neopixel_spi.ExpandBits([]byte{0xFF, 0xFF, 0xFF})
+	g := neopixel_spi.ExpandBits([]byte{0x40, 0, 0})
+	r := neopixel_spi.ExpandBits([]byte{0, 0x40, 0})
+	b := neopixel_spi.ExpandBits([]byte{0, 0, 0x40})
+	c := neopixel_spi.ExpandBits([]byte{0, 0, 0})
 
 	space := bytes.Repeat([]byte{0}, 1000)
 
 	var buf []byte
 	buf = append(buf, space...)
-	buf = append(buf, expanded...)
-	buf = append(buf, expanded...)
+
+	buf = append(buf, g...)
+	buf = append(buf, g...)
+	buf = append(buf, g...)
+
+	buf = append(buf, c...)
+
+	buf = append(buf, b...)
+	buf = append(buf, b...)
+
+	buf = append(buf, r...)
+
+	buf = append(buf, c...)
+
 	buf = append(buf, space...)
 
-	for range time.NewTicker(30 * time.Millisecond).C {
+	for {
 		err := spi.Tx(buf, nil)
 		if err != nil {
 			forever(err)
