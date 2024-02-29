@@ -75,12 +75,16 @@ func main() {
 	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_DRE)
 	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_TXC)
 
-	for range time.NewTicker(1000 * time.Millisecond).C {
-		d.Animate()
-		dreCount := atomic.LoadUint64(&d.InterruptCount)
-		dt := time.Now().Sub(t0).Seconds()
+	ticker := time.NewTicker(1000 * time.Millisecond)
+	for {
+		select {
+		case <-ticker.C:
+			d.Animate()
+			dreCount := atomic.LoadUint64(&d.InterruptCount)
+			dt := time.Now().Sub(t0).Seconds()
 
-		fmt.Println(atomic.LoadUint64(&d.TXCInterruptCount), dreCount, float64(dreCount)/dt)
+			fmt.Println(atomic.LoadUint64(&d.TXCInterruptCount), dreCount, float64(dreCount)/dt)
+		}
 	}
 }
 
