@@ -1,7 +1,7 @@
 package driver
 
 import (
-	"bytes"
+	"image/color"
 	"machine"
 	"runtime/interrupt"
 	"sync/atomic"
@@ -16,7 +16,7 @@ type NeoSpiDriver struct {
 	pos             int
 	spaceCount      int
 	spacesRemaining int
-	buf             []byte
+	buf             []color.RGBA
 }
 
 func NewNeoSpiDriver(spi *machine.SPI, intr interrupt.Interrupt, spaceCount int) *NeoSpiDriver {
@@ -28,23 +28,13 @@ func NewNeoSpiDriver(spi *machine.SPI, intr interrupt.Interrupt, spaceCount int)
 	}
 }
 
-var g = []byte{0x40, 0, 0}
-var r = []byte{0, 0x40, 0}
-var b = []byte{0, 0, 0x40}
-var c = []byte{0, 0, 0}
-
-func appendAll(a0 []byte, as ...[]byte) []byte {
-	var result []byte
-	result = append(result, a0...)
-	for _, a := range as {
-		result = append(result, a...)
-	}
-	return result
-}
+var r = color.RGBA{0x40, 0, 0, 0}
+var g = color.RGBA{0, 0x40, 0, 0}
+var b = color.RGBA{0, 0, 0x40, 0}
 
 func (d *NeoSpiDriver) Init() {
-	d.buf = bytes.Repeat(appendAll(r, r, g), 5)
-	d.dmaBuf = make([]byte, len(d.buf)*3)
+	d.buf = []color.RGBA{r, g, b, r, g, b, r, g, b, r, g, b, r, g, b, r, g, b}
+	d.dmaBuf = make([]byte, len(d.buf)*9) // TODO: hide the details of this *9
 	neopixel_spi.ExpandBits(d.buf, d.dmaBuf)
 }
 

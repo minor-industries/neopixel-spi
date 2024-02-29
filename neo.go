@@ -1,10 +1,14 @@
 package neopixel_spi
 
-func ExpandBits(in []byte, out []byte) {
+import "image/color"
+
+func ExpandBits(in []color.RGBA, out []byte) {
 	bytePos := 0
 	bitPos := 0
-	for _, b := range in {
-		bytePos, bitPos = packByte(out, bytePos, bitPos, b)
+	for _, c := range in {
+		bytePos, bitPos = packByte(out, bytePos, bitPos, c.G)
+		bytePos, bitPos = packByte(out, bytePos, bitPos, c.R)
+		bytePos, bitPos = packByte(out, bytePos, bitPos, c.B)
 	}
 }
 

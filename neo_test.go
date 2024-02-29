@@ -1,14 +1,16 @@
 package neopixel_spi
 
 import (
-	"bytes"
 	"fmt"
+	"image/color"
 	"testing"
 )
 
+var r = color.RGBA{0x40, 0, 0, 0}
+
 func Test_packBit(t *testing.T) {
-	in := []byte{0x40, 0, 0}
-	out := make([]byte, len(in)*3)
+	in := []color.RGBA{r}
+	out := make([]byte, len(in)*3*3)
 	ExpandBits(in, out)
 	for i, b := range out {
 		fmt.Printf("%4d, %08b\n", i, b)
@@ -25,10 +27,8 @@ func appendAll(a0 []byte, as ...[]byte) []byte {
 }
 
 func Test_It(t *testing.T) {
-	//t.Skip()
-	var g = []byte{0x40, 0, 0}
-	strip := bytes.Repeat(g, 13)
-	dmaStrip := make([]byte, len(strip)*3)
+	strip := []color.RGBA{r, r, r, r, r, r, r, r, r, r, r, r, r}
+	dmaStrip := make([]byte, len(strip)*3*3)
 	ExpandBits(strip, dmaStrip)
 
 	buf := appendAll(
