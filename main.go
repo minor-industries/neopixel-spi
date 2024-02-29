@@ -34,6 +34,7 @@ func txcInterruptHandler(i interrupt.Interrupt) {
 
 func main() {
 	spi = &machine.SPI{Bus: sam.SERCOM5_SPIM, SERCOM: 5}
+
 	err := spi.Configure(machine.SPIConfig{
 		Frequency: 2_400_000,
 		SCK:       machine.PA22, // 5.1 (sercom alt)
@@ -44,6 +45,19 @@ func main() {
 	})
 	if err != nil {
 		forever(err)
+	}
+
+	// Disable SPI port.
+	spi.Bus.CTRLA.ClearBits(sam.SERCOM_SPIM_CTRLA_ENABLE)
+	for spi.Bus.SYNCBUSY.HasBits(sam.SERCOM_SPIM_SYNCBUSY_ENABLE) {
+	}
+
+	// set 32 bit mode
+	spi.Bus.CTRLC.Set(sam.SERCOM_SPIM_CTRLC_DATA32B)
+
+	// Enable SPI port.
+	spi.Bus.CTRLA.SetBits(sam.SERCOM_SPIM_CTRLA_ENABLE)
+	for spi.Bus.SYNCBUSY.HasBits(sam.SERCOM_SPIM_SYNCBUSY_ENABLE) {
 	}
 
 	intr := interrupt.New(sam.IRQ_SERCOM5_0, spiInterruptHandler)

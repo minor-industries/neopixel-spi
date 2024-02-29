@@ -2,6 +2,10 @@ package neopixel_spi
 
 import "image/color"
 
+func Bufsize(sz int) int {
+	return sz * 9
+}
+
 func ExpandBits(in []color.RGBA, out []byte) {
 	bytePos := 0
 	bitPos := 0

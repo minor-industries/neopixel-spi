@@ -4,6 +4,10 @@ import (
 	"image/color"
 )
 
+func Bufsize32(sz int) int {
+	return (sz*9 + 3) / 4
+}
+
 func ExpandBits32(in []color.RGBA, out []uint32) {
 	outIndex := 0
 	bitPos := 0

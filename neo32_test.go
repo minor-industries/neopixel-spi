@@ -7,9 +7,9 @@ import (
 )
 
 func Test_packBit32(t *testing.T) {
-	in := []color.RGBA{r, r, r, r}
+	in := []color.RGBA{r, r, r, r, r, r, r, r, r}
 
-	outSize := ((len(in) * 9) + 3) / 4
+	outSize := Bufsize32(len(in))
 
 	out := make([]uint32, outSize)
 	ExpandBits32(in, out)

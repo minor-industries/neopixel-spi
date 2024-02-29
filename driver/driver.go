@@ -11,7 +11,7 @@ import (
 )
 
 type NeoSpiDriver struct {
-	dmaBuf          []byte
+	dmaBuf          []uint32
 	spi             *machine.SPI
 	pos             int
 	spaceCount      int
@@ -44,7 +44,7 @@ var b = color.RGBA{0, 0, 0x40, 0}
 func (d *NeoSpiDriver) Init() {
 	d.orig = []color.RGBA{b, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r}
 	d.buf = make([]color.RGBA, len(d.orig))
-	d.dmaBuf = make([]byte, len(d.buf)*9) // TODO: hide the details of this *9
+	d.dmaBuf = make([]uint32, neopixel_spi.Bufsize32(len(d.buf)))
 	d.Animate()
 }
 
@@ -55,7 +55,7 @@ func (d *NeoSpiDriver) Animate() {
 		d.buf[i2] = d.orig[i]
 	}
 
-	neopixel_spi.ExpandBits(d.buf, d.dmaBuf)
+	neopixel_spi.ExpandBits32(d.buf, d.dmaBuf)
 }
 
 func (d *NeoSpiDriver) SpiInterruptHandler(i interrupt.Interrupt) {
