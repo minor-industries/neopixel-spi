@@ -10,15 +10,22 @@ import (
 )
 
 type NeoSpiDriver struct {
-	buf            []byte
-	spi            *machine.SPI
-	intr           interrupt.Interrupt
-	InterruptCount uint64
-	pos            int
+	buf             []byte
+	spi             *machine.SPI
+	intr            interrupt.Interrupt
+	InterruptCount  uint64
+	pos             int
+	spaceCount      int
+	spacesRemaining int
 }
 
-func NewNeoSpiDriver(spi *machine.SPI, intr interrupt.Interrupt) *NeoSpiDriver {
-	return &NeoSpiDriver{spi: spi, intr: intr}
+func NewNeoSpiDriver(spi *machine.SPI, intr interrupt.Interrupt, spaceCount int) *NeoSpiDriver {
+	return &NeoSpiDriver{
+		spi:             spi,
+		intr:            intr,
+		spaceCount:      spaceCount,
+		spacesRemaining: spaceCount,
+	}
 }
 
 var g = []byte{0x40, 0, 0}
@@ -66,6 +73,11 @@ func (d *NeoSpiDriver) Loop() {
 
 func (d *NeoSpiDriver) SpiInterruptHandler(i interrupt.Interrupt) {
 	atomic.AddUint64(&d.InterruptCount, 1)
+
+	if d.spacesRemaining > 0 {
+		d.spacesRemaining--
+		d.spi.Bus.DATA.Set(uint32(0))
+	}
 
 	d.pos++
 	if d.pos >= len(d.buf) {
