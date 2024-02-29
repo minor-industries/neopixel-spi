@@ -60,6 +60,8 @@ func main() {
 	for spi.Bus.SYNCBUSY.HasBits(sam.SERCOM_SPIM_SYNCBUSY_ENABLE) {
 	}
 
+	t0 := time.Now()
+
 	intr := interrupt.New(sam.IRQ_SERCOM5_0, spiInterruptHandler)
 	txcIntr := interrupt.New(sam.IRQ_SERCOM5_1, txcInterruptHandler)
 	_ = txcIntr
@@ -75,7 +77,10 @@ func main() {
 
 	for range time.NewTicker(1000 * time.Millisecond).C {
 		d.Animate()
-		fmt.Println(atomic.LoadUint64(&d.TXCInterruptCount))
+		dreCount := atomic.LoadUint64(&d.InterruptCount)
+		dt := time.Now().Sub(t0).Seconds()
+
+		fmt.Println(atomic.LoadUint64(&d.TXCInterruptCount), dreCount, float64(dreCount)/dt)
 	}
 }
 
