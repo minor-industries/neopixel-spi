@@ -2,7 +2,6 @@ package driver
 
 import (
 	"bytes"
-	"device/sam"
 	"machine"
 	"runtime/interrupt"
 	"sync/atomic"
@@ -32,7 +31,6 @@ var g = []byte{0x40, 0, 0}
 var r = []byte{0, 0x40, 0}
 var b = []byte{0, 0, 0x40}
 var c = []byte{0, 0, 0}
-var space = bytes.Repeat([]byte{0}, 1000)
 
 func appendAll(a0 []byte, as ...[]byte) []byte {
 	var result []byte
@@ -44,31 +42,13 @@ func appendAll(a0 []byte, as ...[]byte) []byte {
 }
 
 func (d *NeoSpiDriver) Init() {
-	strip := bytes.Repeat(appendAll(r, b, b), 5)
+	strip := bytes.Repeat(appendAll(r, b, g), 5)
 	dmaStrip := make([]byte, len(strip)*3)
 	neopixel_spi.ExpandBits(strip, dmaStrip)
 
 	d.buf = appendAll(
-		space,
 		dmaStrip,
-		space,
 	)
-}
-
-func (d *NeoSpiDriver) Loop() {
-	i := 0
-	count := 100
-	for count > 0 {
-		for !d.spi.Bus.INTFLAG.HasBits(sam.SERCOM_SPIM_INTFLAG_DRE) {
-		}
-		val := d.buf[i]
-		d.spi.Bus.DATA.Set(uint32(val))
-		i++
-		if i >= len(d.buf) {
-			i = 0
-			count--
-		}
-	}
 }
 
 func (d *NeoSpiDriver) SpiInterruptHandler(i interrupt.Interrupt) {

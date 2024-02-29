@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"machine"
 	"runtime/interrupt"
-	"sync/atomic"
 	"time"
 	"uc-go/app/neopixel-spi/driver"
 )
@@ -47,12 +46,6 @@ func main() {
 	for range time.NewTicker(time.Second).C {
 		//fmt.Println("hello", atomic.LoadUint64(&d.InterruptCount))
 	}
-
-	for {
-		d.Loop()
-		fmt.Println("hello", atomic.LoadUint64(&d.InterruptCount))
-	}
-
 }
 
 func forever(err error) {
