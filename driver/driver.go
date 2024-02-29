@@ -5,7 +5,7 @@ import (
 	"device/sam"
 	"machine"
 	"runtime/interrupt"
-	"runtime/volatile"
+	"sync/atomic"
 	neopixel_spi "uc-go/pkg/neopixel-spi"
 )
 
@@ -13,7 +13,8 @@ type NeoSpiDriver struct {
 	Buf            []byte
 	Spi            *machine.SPI
 	Intr           interrupt.Interrupt
-	InterruptCount uint8
+	InterruptCount uint64
+	pos            int
 }
 
 var g = neopixel_spi.ExpandBits([]byte{0x40, 0, 0})
@@ -34,8 +35,8 @@ func appendAll(a0 []byte, as ...[]byte) []byte {
 func (d *NeoSpiDriver) Init() {
 	d.Buf = appendAll(
 		space,
-		r, g, b, r,
-		bytes.Repeat(c, 13),
+		//r, g, b, r, g,
+		bytes.Repeat(g, 13),
 		space,
 	)
 }
@@ -57,7 +58,12 @@ func (d *NeoSpiDriver) Loop() {
 }
 
 func (d *NeoSpiDriver) SpiInterruptHandler(i interrupt.Interrupt) {
-	d.Intr.Disable()
-	volatile.StoreUint8(&d.InterruptCount, 1)
-	//d.Spi.Bus.INTFLAG.Set(sam.SERCOM_SPIM_INTFLAG_DRE) // this doesn't do anything
+	atomic.AddUint64(&d.InterruptCount, 1)
+
+	d.pos++
+	if d.pos >= len(d.Buf) {
+		d.pos = 0
+	}
+
+	d.Spi.Bus.DATA.Set(uint32(d.Buf[d.pos]))
 }
