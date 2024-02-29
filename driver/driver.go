@@ -33,13 +33,13 @@ func appendAll(a0 []byte, as ...[]byte) []byte {
 }
 
 func (d *NeoSpiDriver) Init() {
-	strip := bytes.Repeat(appendAll(r, g, b), 5)
+	strip := bytes.Repeat(appendAll(r, r, b), 5)
 	dmaStrip := make([]byte, len(strip)*3)
 	neopixel_spi.ExpandBits(strip, dmaStrip)
 
 	d.Buf = appendAll(
-		space,
 		dmaStrip,
+		space,
 		space,
 	)
 }
