@@ -12,10 +12,7 @@ import (
 )
 
 // TODO:
-// - Basic animations
-// - Get counts of transmit complete interrupts (TXC)
-// - Add IR
-// - 32-bit extension
+// Try other IR receivers, IR performance
 
 var (
 	ledPin = machine.PA23
