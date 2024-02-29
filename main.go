@@ -36,6 +36,10 @@ func main() {
 		LSBFirst:  true,
 		Mode:      0,
 	})
+	if err != nil {
+		forever(err)
+	}
+
 	intr := interrupt.New(sam.IRQ_SERCOM5_0, spiInterruptHandler)
 
 	d = driver.NewNeoSpiDriver(spi, intr, 2000)
@@ -44,12 +48,8 @@ func main() {
 	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_DRE)
 	intr.Enable()
 
-	if err != nil {
-		forever(err)
-	}
-
-	for range time.NewTicker(time.Second).C {
-		//fmt.Println("hello", atomic.LoadUint64(&d.InterruptCount))
+	for range time.NewTicker(100 * time.Millisecond).C {
+		d.Animate()
 	}
 }
 
