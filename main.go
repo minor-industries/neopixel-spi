@@ -7,6 +7,7 @@ import (
 	"runtime/interrupt"
 	"sync/atomic"
 	"time"
+	"tinygo.org/x/drivers/irremote"
 	"uc-go/app/neopixel-spi/driver"
 )
 
@@ -75,15 +76,34 @@ func main() {
 	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_DRE)
 	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_TXC)
 
+	irPin := machine.PA15
+
+	ir := irremote.NewReceiver(irPin)
+	ir.Configure()
+
+	ch := make(chan irremote.Data, 10)
+	ir.SetCommandHandler(func(data irremote.Data) {
+		ch <- data
+	})
+
+	irCount := 0
+
 	ticker := time.NewTicker(1000 * time.Millisecond)
 	for {
 		select {
 		case <-ticker.C:
 			d.Animate()
+		case data := <-ch:
+			switch data.Command {
+			case 16:
+				irCount++
+			case 17:
+				irCount--
+			}
 			dreCount := atomic.LoadUint64(&d.InterruptCount)
 			dt := time.Now().Sub(t0).Seconds()
 
-			fmt.Println(atomic.LoadUint64(&d.TXCInterruptCount), dreCount, float64(dreCount)/dt)
+			fmt.Println(atomic.LoadUint64(&d.TXCInterruptCount), dreCount, float64(dreCount)/dt, irCount)
 		}
 	}
 }
