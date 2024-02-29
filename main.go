@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"machine"
 	"runtime/interrupt"
+	"sync/atomic"
 	"time"
 	"uc-go/app/neopixel-spi/driver"
 )
 
 // TODO:
 // - Basic animations
+// - Get counts of transmit complete interrupts (TXC)
 // - Add IR
 // - 32-bit extension
 
@@ -24,6 +26,10 @@ var d *driver.NeoSpiDriver
 
 func spiInterruptHandler(i interrupt.Interrupt) {
 	d.SpiInterruptHandler(i)
+}
+
+func txcInterruptHandler(i interrupt.Interrupt) {
+	d.TxcInterruptHandler(i)
 }
 
 func main() {
@@ -41,15 +47,21 @@ func main() {
 	}
 
 	intr := interrupt.New(sam.IRQ_SERCOM5_0, spiInterruptHandler)
+	txcIntr := interrupt.New(sam.IRQ_SERCOM5_1, txcInterruptHandler)
+	_ = txcIntr
 
-	d = driver.NewNeoSpiDriver(spi, intr, 2000)
+	d = driver.NewNeoSpiDriver(spi, 2000)
 	d.Init()
 
-	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_DRE)
 	intr.Enable()
+	txcIntr.Enable()
 
-	for range time.NewTicker(100 * time.Millisecond).C {
+	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_DRE)
+	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_TXC)
+
+	for range time.NewTicker(1000 * time.Millisecond).C {
 		d.Animate()
+		fmt.Println(atomic.LoadUint64(&d.TXCInterruptCount))
 	}
 }
 

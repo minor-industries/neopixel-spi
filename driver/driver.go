@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"device/sam"
 	"image/color"
 	"machine"
 	"runtime/interrupt"
@@ -12,8 +13,6 @@ import (
 type NeoSpiDriver struct {
 	dmaBuf          []byte
 	spi             *machine.SPI
-	intr            interrupt.Interrupt
-	InterruptCount  uint64
 	pos             int
 	spaceCount      int
 	spacesRemaining int
@@ -21,12 +20,17 @@ type NeoSpiDriver struct {
 	t0              time.Time
 	frameNo         int
 	orig            []color.RGBA
+
+	InterruptCount    uint64
+	TXCInterruptCount uint64
 }
 
-func NewNeoSpiDriver(spi *machine.SPI, intr interrupt.Interrupt, spaceCount int) *NeoSpiDriver {
+func NewNeoSpiDriver(
+	spi *machine.SPI,
+	spaceCount int,
+) *NeoSpiDriver {
 	return &NeoSpiDriver{
 		spi:             spi,
-		intr:            intr,
 		spaceCount:      spaceCount,
 		spacesRemaining: spaceCount,
 		t0:              time.Now(),
@@ -73,4 +77,9 @@ func (d *NeoSpiDriver) SpiInterruptHandler(i interrupt.Interrupt) {
 space:
 	d.spacesRemaining--
 	d.spi.Bus.DATA.Set(uint32(0))
+}
+
+func (d *NeoSpiDriver) TxcInterruptHandler(i interrupt.Interrupt) {
+	atomic.AddUint64(&d.TXCInterruptCount, 1)
+	d.spi.Bus.INTFLAG.Set(sam.SERCOM_SPIM_INTFLAG_TXC)
 }
