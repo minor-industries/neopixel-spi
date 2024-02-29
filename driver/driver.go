@@ -75,14 +75,19 @@ func (d *NeoSpiDriver) SpiInterruptHandler(i interrupt.Interrupt) {
 	atomic.AddUint64(&d.InterruptCount, 1)
 
 	if d.spacesRemaining > 0 {
-		d.spacesRemaining--
-		d.spi.Bus.DATA.Set(uint32(0))
+		goto space
+	} else {
+		if d.pos >= len(d.buf) {
+			d.pos = 0
+			d.spacesRemaining = d.spaceCount
+			goto space
+		} else {
+			d.spi.Bus.DATA.Set(uint32(d.buf[d.pos]))
+			d.pos++
+		}
 	}
 
-	d.pos++
-	if d.pos >= len(d.buf) {
-		d.pos = 0
-	}
-
-	d.spi.Bus.DATA.Set(uint32(d.buf[d.pos]))
+space:
+	d.spacesRemaining--
+	d.spi.Bus.DATA.Set(uint32(0))
 }

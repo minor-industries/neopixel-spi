@@ -34,7 +34,7 @@ func main() {
 	})
 	intr := interrupt.New(sam.IRQ_SERCOM5_0, spiInterruptHandler)
 
-	d = driver.NewNeoSpiDriver(spi, intr, 1e6)
+	d = driver.NewNeoSpiDriver(spi, intr, 2000)
 	d.Init()
 
 	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_DRE)
