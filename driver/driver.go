@@ -42,13 +42,9 @@ func appendAll(a0 []byte, as ...[]byte) []byte {
 }
 
 func (d *NeoSpiDriver) Init() {
-	strip := bytes.Repeat(appendAll(r, b, g), 5)
-	dmaStrip := make([]byte, len(strip)*3)
-	neopixel_spi.ExpandBits(strip, dmaStrip)
-
-	d.buf = appendAll(
-		dmaStrip,
-	)
+	strip := bytes.Repeat(appendAll(r, r, g), 5)
+	d.buf = make([]byte, len(strip)*3)
+	neopixel_spi.ExpandBits(strip, d.buf)
 }
 
 func (d *NeoSpiDriver) SpiInterruptHandler(i interrupt.Interrupt) {

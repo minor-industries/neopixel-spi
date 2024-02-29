@@ -9,6 +9,11 @@ import (
 	"uc-go/app/neopixel-spi/driver"
 )
 
+// TODO:
+// - Basic animations
+// - Add IR
+// - 32-bit extension
+
 var (
 	ledPin = machine.PA23
 )
