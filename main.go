@@ -32,13 +32,13 @@ func main() {
 		LSBFirst:  true,
 		Mode:      0,
 	})
+	intr := interrupt.New(sam.IRQ_SERCOM5_0, spiInterruptHandler)
 
-	d = &driver.NeoSpiDriver{Spi: spi}
+	d = driver.NewNeoSpiDriver(spi, intr)
 	d.Init()
 
 	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_DRE)
-	d.Intr = interrupt.New(sam.IRQ_SERCOM5_0, spiInterruptHandler)
-	d.Intr.Enable()
+	intr.Enable()
 
 	if err != nil {
 		forever(err)

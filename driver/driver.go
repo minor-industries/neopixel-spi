@@ -10,11 +10,15 @@ import (
 )
 
 type NeoSpiDriver struct {
-	Buf            []byte
-	Spi            *machine.SPI
-	Intr           interrupt.Interrupt
+	buf            []byte
+	spi            *machine.SPI
+	intr           interrupt.Interrupt
 	InterruptCount uint64
 	pos            int
+}
+
+func NewNeoSpiDriver(spi *machine.SPI, intr interrupt.Interrupt) *NeoSpiDriver {
+	return &NeoSpiDriver{spi: spi, intr: intr}
 }
 
 var g = []byte{0x40, 0, 0}
@@ -33,13 +37,13 @@ func appendAll(a0 []byte, as ...[]byte) []byte {
 }
 
 func (d *NeoSpiDriver) Init() {
-	strip := bytes.Repeat(appendAll(r, r, b), 5)
+	strip := bytes.Repeat(appendAll(r, b, b), 5)
 	dmaStrip := make([]byte, len(strip)*3)
 	neopixel_spi.ExpandBits(strip, dmaStrip)
 
-	d.Buf = appendAll(
-		dmaStrip,
+	d.buf = appendAll(
 		space,
+		dmaStrip,
 		space,
 	)
 }
@@ -48,12 +52,12 @@ func (d *NeoSpiDriver) Loop() {
 	i := 0
 	count := 100
 	for count > 0 {
-		for !d.Spi.Bus.INTFLAG.HasBits(sam.SERCOM_SPIM_INTFLAG_DRE) {
+		for !d.spi.Bus.INTFLAG.HasBits(sam.SERCOM_SPIM_INTFLAG_DRE) {
 		}
-		val := d.Buf[i]
-		d.Spi.Bus.DATA.Set(uint32(val))
+		val := d.buf[i]
+		d.spi.Bus.DATA.Set(uint32(val))
 		i++
-		if i >= len(d.Buf) {
+		if i >= len(d.buf) {
 			i = 0
 			count--
 		}
@@ -64,9 +68,9 @@ func (d *NeoSpiDriver) SpiInterruptHandler(i interrupt.Interrupt) {
 	atomic.AddUint64(&d.InterruptCount, 1)
 
 	d.pos++
-	if d.pos >= len(d.Buf) {
+	if d.pos >= len(d.buf) {
 		d.pos = 0
 	}
 
-	d.Spi.Bus.DATA.Set(uint32(d.Buf[d.pos]))
+	d.spi.Bus.DATA.Set(uint32(d.buf[d.pos]))
 }
