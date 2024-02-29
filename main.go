@@ -27,7 +27,7 @@ func spiInterruptHandler(i interrupt.Interrupt) {
 func main() {
 	spi = &machine.SPI{Bus: sam.SERCOM5_SPIM, SERCOM: 5}
 
-	d := &driver.NeoSpiDriver{}
+	d := &driver.NeoSpiDriver{Spi: spi}
 	d.Init()
 
 	err := spi.Configure(machine.SPIConfig{
@@ -48,26 +48,10 @@ func main() {
 	}
 
 	for {
-		loop(d)
+		d.Loop()
 		fmt.Println("hello", volatile.LoadUint8(&interruptCount))
 	}
 
-}
-
-func loop(d *driver.NeoSpiDriver) {
-	i := 0
-	count := 100
-	for count > 0 {
-		for !spi.Bus.INTFLAG.HasBits(sam.SERCOM_SPIM_INTFLAG_DRE) {
-		}
-		val := d.Buf[i]
-		spi.Bus.DATA.Set(uint32(val))
-		i++
-		if i >= len(d.Buf) {
-			i = 0
-			count--
-		}
-	}
 }
 
 func forever(err error) {
