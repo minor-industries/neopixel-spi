@@ -9,13 +9,14 @@ import (
 )
 
 type NeoSpiDriver struct {
-	buf             []byte
+	dmaBuf          []byte
 	spi             *machine.SPI
 	intr            interrupt.Interrupt
 	InterruptCount  uint64
 	pos             int
 	spaceCount      int
 	spacesRemaining int
+	buf             []byte
 }
 
 func NewNeoSpiDriver(spi *machine.SPI, intr interrupt.Interrupt, spaceCount int) *NeoSpiDriver {
@@ -42,9 +43,9 @@ func appendAll(a0 []byte, as ...[]byte) []byte {
 }
 
 func (d *NeoSpiDriver) Init() {
-	strip := bytes.Repeat(appendAll(r, r, g), 5)
-	d.buf = make([]byte, len(strip)*3)
-	neopixel_spi.ExpandBits(strip, d.buf)
+	d.buf = bytes.Repeat(appendAll(r, r, g), 5)
+	d.dmaBuf = make([]byte, len(d.buf)*3)
+	neopixel_spi.ExpandBits(d.buf, d.dmaBuf)
 }
 
 func (d *NeoSpiDriver) SpiInterruptHandler(i interrupt.Interrupt) {
@@ -53,12 +54,12 @@ func (d *NeoSpiDriver) SpiInterruptHandler(i interrupt.Interrupt) {
 	if d.spacesRemaining > 0 {
 		goto space
 	} else {
-		if d.pos >= len(d.buf) {
+		if d.pos >= len(d.dmaBuf) {
 			d.pos = 0
 			d.spacesRemaining = d.spaceCount
 			goto space
 		} else {
-			d.spi.Bus.DATA.Set(uint32(d.buf[d.pos]))
+			d.spi.Bus.DATA.Set(uint32(d.dmaBuf[d.pos]))
 			d.pos++
 		}
 	}
