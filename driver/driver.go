@@ -17,10 +17,10 @@ type NeoSpiDriver struct {
 	pos            int
 }
 
-var g = neopixel_spi.ExpandBits([]byte{0x40, 0, 0})
-var r = neopixel_spi.ExpandBits([]byte{0, 0x40, 0})
-var b = neopixel_spi.ExpandBits([]byte{0, 0, 0x40})
-var c = neopixel_spi.ExpandBits([]byte{0, 0, 0})
+var g = []byte{0x40, 0, 0}
+var r = []byte{0, 0x40, 0}
+var b = []byte{0, 0, 0x40}
+var c = []byte{0, 0, 0}
 var space = bytes.Repeat([]byte{0}, 1000)
 
 func appendAll(a0 []byte, as ...[]byte) []byte {
@@ -33,10 +33,13 @@ func appendAll(a0 []byte, as ...[]byte) []byte {
 }
 
 func (d *NeoSpiDriver) Init() {
+	strip := bytes.Repeat(appendAll(r, g, b), 5)
+	dmaStrip := make([]byte, len(strip)*3)
+	neopixel_spi.ExpandBits(strip, dmaStrip)
+
 	d.Buf = appendAll(
 		space,
-		//r, g, b, r, g,
-		bytes.Repeat(g, 13),
+		dmaStrip,
 		space,
 	)
 }
