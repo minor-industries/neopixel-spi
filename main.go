@@ -73,7 +73,7 @@ func main() {
 	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_DRE)
 	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_TXC)
 
-	irPin := machine.PA15
+	irPin := machine.D5
 
 	ir := irremote.NewReceiver(irPin)
 	ir.Configure()
