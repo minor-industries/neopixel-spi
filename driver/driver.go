@@ -16,33 +16,29 @@ type NeoSpiDriver struct {
 	pos             int
 	spaceCount      int
 	spacesRemaining int
-	buf             []color.RGBA
 	t0              time.Time
-	frameNo         int
-	orig            []color.RGBA
 
 	InterruptCount    uint64
 	TXCInterruptCount uint64
 	dreHandler        func(i interrupt.Interrupt)
 	txcHandler        func(i interrupt.Interrupt)
+	ledCount          int
 }
 
 func NewNeoSpiDriver(
 	spi *machine.SPI,
+	ledCount int,
 	spaceCount int,
 ) *NeoSpiDriver {
 	return &NeoSpiDriver{
 		spi:        spi,
+		ledCount:   ledCount,
 		spaceCount: spaceCount,
 
 		spacesRemaining: spaceCount,
 		t0:              time.Now(),
 	}
 }
-
-var r = color.RGBA{0x40, 0, 0, 0}
-var g = color.RGBA{0, 0x40, 0, 0}
-var b = color.RGBA{0, 0, 0x40, 0}
 
 func (d *NeoSpiDriver) Init() {
 	// Disable SPI port.
@@ -61,20 +57,11 @@ func (d *NeoSpiDriver) Init() {
 	d.spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_DRE)
 	d.spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_TXC)
 
-	d.orig = []color.RGBA{b, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r}
-	d.buf = make([]color.RGBA, len(d.orig))
-	d.dmaBuf = make([]uint32, neopixel_spi.Bufsize32(len(d.buf)))
-	d.Animate()
+	d.dmaBuf = make([]uint32, neopixel_spi.Bufsize32(d.ledCount))
 }
 
-func (d *NeoSpiDriver) Animate() {
-	d.frameNo++
-	for i := range d.orig {
-		i2 := (i + d.frameNo) % len(d.buf)
-		d.buf[i2] = d.orig[i]
-	}
-
-	neopixel_spi.ExpandBits32(d.buf, d.dmaBuf)
+func (d *NeoSpiDriver) Animate(buf []color.RGBA) {
+	neopixel_spi.ExpandBits32(buf, d.dmaBuf)
 }
 
 func (d *NeoSpiDriver) SpiInterruptHandler(i interrupt.Interrupt) {

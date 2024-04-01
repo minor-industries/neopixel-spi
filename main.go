@@ -3,6 +3,7 @@ package main
 import (
 	"device/sam"
 	"fmt"
+	"image/color"
 	"machine"
 	"runtime/interrupt"
 	"time"
@@ -44,8 +45,16 @@ func main() {
 		forever(err)
 	}
 
+	var r = color.RGBA{0x40, 0, 0, 0}
+	var g = color.RGBA{0, 0x40, 0, 0}
+	var b = color.RGBA{0, 0, 0x40, 0}
+
+	orig := []color.RGBA{b, g, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r}
+	buf := make([]color.RGBA, len(orig))
+
 	d = driver.NewNeoSpiDriver(
 		spi,
+		len(buf),
 		2000,
 	)
 
@@ -66,11 +75,18 @@ func main() {
 
 	irCount := 0
 
+	frameNo := 0
 	ticker := time.NewTicker(1000 * time.Millisecond)
 	for {
 		select {
 		case <-ticker.C:
-			d.Animate()
+			// do the animation
+			frameNo++
+			for i := range orig {
+				i2 := (i + frameNo) % len(buf)
+				buf[i2] = orig[i]
+			}
+			d.Animate(buf)
 		case data := <-ch:
 			if data.Flags&irremote.DataFlagIsRepeat != 0 {
 				continue
