@@ -6,7 +6,6 @@ import (
 	"machine"
 	"runtime/interrupt"
 	"sync/atomic"
-	"time"
 	neopixel_spi "uc-go/pkg/neopixel-spi"
 )
 
@@ -16,12 +15,9 @@ type NeoSpiDriver struct {
 	pos             int
 	spaceCount      int
 	spacesRemaining int
-	t0              time.Time
 
 	InterruptCount    uint64
 	TXCInterruptCount uint64
-	dreHandler        func(i interrupt.Interrupt)
-	txcHandler        func(i interrupt.Interrupt)
 	ledCount          int
 }
 
@@ -36,7 +32,6 @@ func NewNeoSpiDriver(
 		spaceCount: spaceCount,
 
 		spacesRemaining: spaceCount,
-		t0:              time.Now(),
 	}
 }
 
