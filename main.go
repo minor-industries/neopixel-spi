@@ -21,11 +21,11 @@ var spi *machine.SPI
 
 var d *driver.NeoSpiDriver
 
-func spiInterruptHandler(i interrupt.Interrupt) {
+func dreHandler(i interrupt.Interrupt) {
 	d.SpiInterruptHandler(i)
 }
 
-func txcInterruptHandler(i interrupt.Interrupt) {
+func txcHandler(i interrupt.Interrupt) {
 	d.TxcInterruptHandler(i)
 }
 
@@ -44,31 +44,15 @@ func main() {
 		forever(err)
 	}
 
-	// Disable SPI port.
-	spi.Bus.CTRLA.ClearBits(sam.SERCOM_SPIM_CTRLA_ENABLE)
-	for spi.Bus.SYNCBUSY.HasBits(sam.SERCOM_SPIM_SYNCBUSY_ENABLE) {
-	}
+	d = driver.NewNeoSpiDriver(
+		spi,
+		2000,
+	)
 
-	// set 32 bit mode
-	spi.Bus.CTRLC.Set(sam.SERCOM_SPIM_CTRLC_DATA32B)
+	interrupt.New(sam.IRQ_SERCOM5_0, dreHandler).Enable()
+	interrupt.New(sam.IRQ_SERCOM5_1, txcHandler).Enable()
 
-	// Enable SPI port.
-	spi.Bus.CTRLA.SetBits(sam.SERCOM_SPIM_CTRLA_ENABLE)
-	for spi.Bus.SYNCBUSY.HasBits(sam.SERCOM_SPIM_SYNCBUSY_ENABLE) {
-	}
-
-	intr := interrupt.New(sam.IRQ_SERCOM5_0, spiInterruptHandler)
-	txcIntr := interrupt.New(sam.IRQ_SERCOM5_1, txcInterruptHandler)
-	_ = txcIntr
-
-	d = driver.NewNeoSpiDriver(spi, 2000)
 	d.Init()
-
-	intr.Enable()
-	txcIntr.Enable()
-
-	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_DRE)
-	spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_TXC)
 
 	irPin := machine.D5
 

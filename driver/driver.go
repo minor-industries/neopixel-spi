@@ -23,6 +23,8 @@ type NeoSpiDriver struct {
 
 	InterruptCount    uint64
 	TXCInterruptCount uint64
+	dreHandler        func(i interrupt.Interrupt)
+	txcHandler        func(i interrupt.Interrupt)
 }
 
 func NewNeoSpiDriver(
@@ -30,8 +32,9 @@ func NewNeoSpiDriver(
 	spaceCount int,
 ) *NeoSpiDriver {
 	return &NeoSpiDriver{
-		spi:             spi,
-		spaceCount:      spaceCount,
+		spi:        spi,
+		spaceCount: spaceCount,
+
 		spacesRemaining: spaceCount,
 		t0:              time.Now(),
 	}
@@ -42,6 +45,22 @@ var g = color.RGBA{0, 0x40, 0, 0}
 var b = color.RGBA{0, 0, 0x40, 0}
 
 func (d *NeoSpiDriver) Init() {
+	// Disable SPI port.
+	d.spi.Bus.CTRLA.ClearBits(sam.SERCOM_SPIM_CTRLA_ENABLE)
+	for d.spi.Bus.SYNCBUSY.HasBits(sam.SERCOM_SPIM_SYNCBUSY_ENABLE) {
+	}
+
+	// set 32 bit mode
+	d.spi.Bus.CTRLC.Set(sam.SERCOM_SPIM_CTRLC_DATA32B)
+
+	// Enable SPI port.
+	d.spi.Bus.CTRLA.SetBits(sam.SERCOM_SPIM_CTRLA_ENABLE)
+	for d.spi.Bus.SYNCBUSY.HasBits(sam.SERCOM_SPIM_SYNCBUSY_ENABLE) {
+	}
+
+	d.spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_DRE)
+	d.spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_TXC)
+
 	d.orig = []color.RGBA{b, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r}
 	d.buf = make([]color.RGBA, len(d.orig))
 	d.dmaBuf = make([]uint32, neopixel_spi.Bufsize32(len(d.buf)))
