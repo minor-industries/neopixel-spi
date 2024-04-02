@@ -2,12 +2,12 @@ package driver
 
 import (
 	"device/sam"
+	neopixel_spi "github.com/minor-industries/uc-go/pkg/neopixel-spi"
 	"github.com/pkg/errors"
 	"image/color"
 	"machine"
 	"runtime/interrupt"
 	"sync/atomic"
-	neopixel_spi "uc-go/pkg/neopixel-spi"
 )
 
 type NeoSpiDriver struct {

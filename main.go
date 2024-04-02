@@ -3,16 +3,16 @@ package main
 import (
 	"device/sam"
 	"fmt"
+	"github.com/minor-industries/uc-go/app/bikelights/cfg"
+	"github.com/minor-industries/uc-go/pkg/leds/animations/bounce"
+	"github.com/minor-industries/uc-go/pkg/leds/strip"
+	"github.com/minor-industries/uc-go/pkg/neopixel-spi/driver"
+	"github.com/minor-industries/uc-go/pkg/neopixel-spi/driver/default_driver"
+	"github.com/minor-industries/uc-go/pkg/util"
 	"image/color"
 	"machine"
 	"time"
 	"tinygo.org/x/drivers/irremote"
-	"uc-go/app/bikelights/cfg"
-	"uc-go/pkg/leds/animations/bounce"
-	"uc-go/pkg/leds/strip"
-	"uc-go/pkg/neopixel-spi/driver"
-	"uc-go/pkg/neopixel-spi/driver/default_driver"
-	"uc-go/pkg/util"
 )
 
 // TODO:

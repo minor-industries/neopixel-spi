@@ -2,8 +2,8 @@ package default_driver
 
 import (
 	"device/sam"
+	"github.com/minor-industries/uc-go/pkg/neopixel-spi/driver"
 	"runtime/interrupt"
-	"uc-go/pkg/neopixel-spi/driver"
 )
 
 var defaultDriver *driver.NeoSpiDriver
