@@ -3,10 +3,10 @@ package default_driver
 import (
 	"device/sam"
 	"runtime/interrupt"
-	driver2 "uc-go/pkg/neopixel-spi/driver"
+	"uc-go/pkg/neopixel-spi/driver"
 )
 
-var defaultDriver *driver2.NeoSpiDriver
+var defaultDriver *driver.NeoSpiDriver
 
 func defaultDriverDREHandler(i interrupt.Interrupt) {
 	defaultDriver.SpiInterruptHandler(i)
@@ -16,8 +16,8 @@ func defaultDriverTXCHandler(i interrupt.Interrupt) {
 	defaultDriver.TxcInterruptHandler(i)
 }
 
-func Configure(cfg *driver2.Cfg) *driver2.NeoSpiDriver {
-	defaultDriver = driver2.NewNeoSpiDriver(cfg)
+func Configure(cfg *driver.Cfg) *driver.NeoSpiDriver {
+	defaultDriver = driver.NewNeoSpiDriver(cfg)
 
 	// TODO: these IRQs shouldn't be hardcoded. Either computed or configured/overridden.
 	interrupt.New(sam.IRQ_SERCOM5_0, defaultDriverDREHandler).Enable()
