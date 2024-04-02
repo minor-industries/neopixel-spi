@@ -5,63 +5,37 @@ import (
 	"fmt"
 	"image/color"
 	"machine"
-	"runtime/interrupt"
 	"time"
 	"tinygo.org/x/drivers/irremote"
 	"uc-go/app/neopixel-spi/driver"
+	"uc-go/app/neopixel-spi/driver/default_driver"
 )
 
 // TODO:
 // Try other IR receivers, IR performance
 
 var (
-	ledPin = machine.PA23
+	r = color.RGBA{0x40, 0, 0, 0}
+	g = color.RGBA{0, 0x40, 0, 0}
+	b = color.RGBA{0, 0, 0x40, 0}
 )
 
-var spi *machine.SPI
-
-var d *driver.NeoSpiDriver
-
-func dreHandler(i interrupt.Interrupt) {
-	d.SpiInterruptHandler(i)
-}
-
-func txcHandler(i interrupt.Interrupt) {
-	d.TxcInterruptHandler(i)
-}
-
 func main() {
-	spi = &machine.SPI{Bus: sam.SERCOM5_SPIM, SERCOM: 5}
-
-	err := spi.Configure(machine.SPIConfig{
-		Frequency: 2_400_000,
-		SCK:       machine.PA22, // 5.1 (sercom alt)
-		SDO:       machine.PA23, // 5.0 (sercom alt)
-		SDI:       machine.PA20, // 5.2 (sercom alt)
-		LSBFirst:  true,
-		Mode:      0,
-	})
-	if err != nil {
-		forever(err)
-	}
-
-	var r = color.RGBA{0x40, 0, 0, 0}
-	var g = color.RGBA{0, 0x40, 0, 0}
-	var b = color.RGBA{0, 0, 0x40, 0}
-
-	orig := []color.RGBA{b, g, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r}
+	orig := []color.RGBA{b, g, b, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r}
 	buf := make([]color.RGBA, len(orig))
 
-	d = driver.NewNeoSpiDriver(
-		spi,
-		len(buf),
-		2000,
-	)
+	d := default_driver.Configure(&driver.Cfg{
+		SPI:        &machine.SPI{Bus: sam.SERCOM5_SPIM, SERCOM: 5},
+		SCK:        machine.PA22, // 5.1 (sercom alt)
+		SDO:        machine.PA23, // 5.0 (sercom alt)
+		SDI:        machine.PA20, // 5.2 (sercom alt)
+		LedCount:   len(buf),
+		SpaceCount: 2000,
+	})
 
-	interrupt.New(sam.IRQ_SERCOM5_0, dreHandler).Enable()
-	interrupt.New(sam.IRQ_SERCOM5_1, txcHandler).Enable()
-
-	d.Init()
+	if err := d.Init(); err != nil {
+		forever(err)
+	}
 
 	irPin := machine.D5
 

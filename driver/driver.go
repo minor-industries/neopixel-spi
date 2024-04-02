@@ -2,6 +2,7 @@ package driver
 
 import (
 	"device/sam"
+	"github.com/pkg/errors"
 	"image/color"
 	"machine"
 	"runtime/interrupt"
@@ -19,23 +20,32 @@ type NeoSpiDriver struct {
 	InterruptCount    uint64
 	TXCInterruptCount uint64
 	ledCount          int
+	spiConfig         *machine.SPIConfig
 }
 
-func NewNeoSpiDriver(
-	spi *machine.SPI,
-	ledCount int,
-	spaceCount int,
-) *NeoSpiDriver {
+func NewNeoSpiDriver(cfg *Cfg) *NeoSpiDriver {
 	return &NeoSpiDriver{
-		spi:        spi,
-		ledCount:   ledCount,
-		spaceCount: spaceCount,
+		spi:        cfg.SPI,
+		ledCount:   cfg.LedCount,
+		spaceCount: cfg.SpaceCount,
 
-		spacesRemaining: spaceCount,
+		spacesRemaining: cfg.SpaceCount,
+		spiConfig: &machine.SPIConfig{
+			Frequency: 2_400_000,
+			SCK:       cfg.SCK,
+			SDO:       cfg.SDO,
+			SDI:       cfg.SDI,
+			LSBFirst:  true,
+			Mode:      0,
+		},
 	}
 }
 
-func (d *NeoSpiDriver) Init() {
+func (d *NeoSpiDriver) Init() error {
+	if err := d.spi.Configure(*d.spiConfig); err != nil {
+		return errors.Wrap(err, "configure spi")
+	}
+
 	// Disable SPI port.
 	d.spi.Bus.CTRLA.ClearBits(sam.SERCOM_SPIM_CTRLA_ENABLE)
 	for d.spi.Bus.SYNCBUSY.HasBits(sam.SERCOM_SPIM_SYNCBUSY_ENABLE) {
@@ -53,6 +63,8 @@ func (d *NeoSpiDriver) Init() {
 	d.spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_TXC)
 
 	d.dmaBuf = make([]uint32, neopixel_spi.Bufsize32(d.ledCount))
+
+	return nil
 }
 
 func (d *NeoSpiDriver) Animate(buf []color.RGBA) {
