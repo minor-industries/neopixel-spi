@@ -56,12 +56,7 @@ func main() {
 			// do the animation
 			frameNo++
 			b.Tick(0.0, dt.Seconds())
-			strip1.Each(func(i int, led *strip.Led) {
-				buf[i].R = uint8(255 * led.R)
-				buf[i].G = uint8(255 * led.G)
-				buf[i].B = uint8(255 * led.B)
-			})
-			d.Animate(buf)
+			animate(strip1, buf, d, frameNo)
 		case data := <-ch:
 			if data.Flags&irremote.DataFlagIsRepeat != 0 {
 				continue
@@ -74,6 +69,36 @@ func main() {
 			}
 			fmt.Println(irCount)
 		}
+	}
+}
+
+func animate(strip1 *strip.Strip, buf []color.RGBA, d *driver.NeoSpiDriver, frameNo int) {
+	numLEDs := len(buf)
+
+	//i := 0
+
+	for j := 0; j < numLEDs; j++ {
+		buf[j] = wheel((int32(j)*256/int32(numLEDs) + int32(frameNo)) & 255)
+	}
+
+	strip1.Each(func(i int, led *strip.Led) {
+		buf[i].R = uint8(5 * led.R)
+		buf[i].G = uint8(5 * led.G)
+		buf[i].B = uint8(5 * led.B)
+	})
+
+	d.Animate(buf)
+}
+
+func wheel(pos int32) color.RGBA {
+	if pos < 85 {
+		return color.RGBA{uint8(pos * 3), uint8(255 - pos*3), 0, 255}
+	} else if pos < 170 {
+		pos -= 85
+		return color.RGBA{uint8(255 - pos*3), 0, uint8(pos * 3), 255}
+	} else {
+		pos -= 170
+		return color.RGBA{0, uint8(pos * 3), uint8(255 - pos*3), 255}
 	}
 }
 
