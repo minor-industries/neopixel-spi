@@ -12,6 +12,7 @@ import (
 	"uc-go/pkg/leds/strip"
 	"uc-go/pkg/neopixel-spi/driver"
 	"uc-go/pkg/neopixel-spi/driver/default_driver"
+	util2 "uc-go/pkg/util"
 )
 
 // TODO:
@@ -84,53 +85,21 @@ func animate(
 	frameNo int,
 	t float64,
 ) {
-	buf2 := []color.RGBA{
-		{0, 0xFF, 0, 0},
-		{0, 0, 0, 0},
-		{0, 0xFF, 0, 0},
+	const ledMaxLevel = 0.5
+	const scale = 1.0
 
-		{0xFF, 0, 0, 0},
-		{0, 0, 0, 0},
-		{0xFF, 0, 0, 0},
-
-		{0, 0, 0xFF, 0},
-		{0, 0, 0, 0},
-		{0, 0, 0xFF, 0},
-
-		{0, 0xFF / 2, 0, 0},
-		{0, 0, 0, 0},
-		{0, 0xFF / 2, 0, 0},
-
-		{0, 0xFF / 4, 0, 0},
-		{0, 0, 0, 0},
-		{0, 0xFF / 4, 0, 0},
-
-		{0, 0xFF / 8, 0, 0},
-		{0, 0, 0, 0},
-		{0, 0xFF / 8, 0, 0},
-
-		{0, 0xFF / 16, 0, 0},
-		{0, 0, 0, 0},
-		{0, 0xFF / 16, 0, 0},
-
-		{0, 0xFF / 32, 0, 0},
-		{0, 0, 0, 0},
-		{0, 0xFF / 32, 0, 0},
-
-		{0, 0xFF / 64, 0, 0},
-		{0, 0, 0, 0},
-		{0, 0xFF / 64, 0, 0},
-
-		{0, 2, 0, 0},
-		{0, 0, 0, 0},
-		{0, 2, 0, 0},
-
-		{0, 1, 0, 0},
-		{0, 0, 0, 0},
-		{0, 1, 0, 0},
+	convert := func(x float32) uint8 {
+		val := x * scale
+		return uint8(util2.Clamp(0, val, 1.0) * ledMaxLevel * 255.0)
 	}
 
-	d.Animate(buf2)
+	strip1.Each(func(i int, led *strip.Led) {
+		buf[i].R = convert(led.R)
+		buf[i].G = convert(led.G)
+		buf[i].B = convert(led.B)
+	})
+
+	d.Animate(buf)
 }
 
 func forever(err error) {
