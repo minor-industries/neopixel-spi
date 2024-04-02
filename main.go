@@ -7,8 +7,8 @@ import (
 	"machine"
 	"time"
 	"tinygo.org/x/drivers/irremote"
-	"uc-go/app/neopixel-spi/driver"
-	"uc-go/app/neopixel-spi/driver/default_driver"
+	"uc-go/pkg/neopixel-spi/driver"
+	"uc-go/pkg/neopixel-spi/driver/default_driver"
 )
 
 // TODO:
