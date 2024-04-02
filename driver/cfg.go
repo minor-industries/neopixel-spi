@@ -11,4 +11,5 @@ type Cfg struct {
 
 	LedCount   int
 	SpaceCount int // TODO: rethink and/or remove
+	EightBit   bool
 }

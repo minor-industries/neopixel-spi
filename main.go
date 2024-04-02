@@ -29,6 +29,7 @@ func main() {
 		SDI:        machine.PA20, // 5.2 (sercom alt)
 		LedCount:   cfg.DefaultConfig.NumLeds,
 		SpaceCount: 2000,
+		EightBit:   true,
 	})
 
 	if err := d.Init(); err != nil {
@@ -48,6 +49,8 @@ func main() {
 	irCount := 0
 
 	frameNo := 0
+
+	t0 := time.Now()
 	dt := 30 * time.Millisecond
 	ticker := time.NewTicker(dt)
 	for {
@@ -56,7 +59,9 @@ func main() {
 			// do the animation
 			frameNo++
 			b.Tick(0.0, dt.Seconds())
-			animate(strip1, buf, d, frameNo)
+			t := time.Now().Sub(t0).Seconds()
+			animate(strip1, buf, d, frameNo, t)
+
 		case data := <-ch:
 			if data.Flags&irremote.DataFlagIsRepeat != 0 {
 				continue
@@ -72,20 +77,32 @@ func main() {
 	}
 }
 
-func animate(strip1 *strip.Strip, buf []color.RGBA, d *driver.NeoSpiDriver, frameNo int) {
-	numLEDs := len(buf)
+func animate(
+	strip1 *strip.Strip,
+	buf []color.RGBA,
+	d *driver.NeoSpiDriver,
+	frameNo int,
+	t float64,
+) {
+	//numLEDs := len(buf)
+	//
+	////i := 0
+	//
+	//for j := 0; j < numLEDs; j++ {
+	//	buf[j] = wheel((int32(j)*256/int32(numLEDs) + int32(frameNo)) & 255)
+	//}
+	//
+	//strip1.Each(func(i int, led *strip.Led) {
+	//	buf[i].R = uint8(5 * led.R)
+	//	buf[i].G = uint8(5 * led.G)
+	//	buf[i].B = uint8(5 * led.B)
+	//})
 
-	//i := 0
-
-	for j := 0; j < numLEDs; j++ {
-		buf[j] = wheel((int32(j)*256/int32(numLEDs) + int32(frameNo)) & 255)
+	for i := range buf {
+		buf[i].R = uint8(i)
+		buf[i].G = 0
+		buf[i].B = 0
 	}
-
-	strip1.Each(func(i int, led *strip.Led) {
-		buf[i].R = uint8(5 * led.R)
-		buf[i].G = uint8(5 * led.G)
-		buf[i].B = uint8(5 * led.B)
-	})
 
 	d.Animate(buf)
 }

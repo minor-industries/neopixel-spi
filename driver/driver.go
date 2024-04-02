@@ -11,7 +11,8 @@ import (
 )
 
 type NeoSpiDriver struct {
-	dmaBuf          []uint32
+	dmaBuf32        []uint32
+	dmaBuf8         []uint8
 	spi             *machine.SPI
 	pos             int
 	spaceCount      int
@@ -21,10 +22,12 @@ type NeoSpiDriver struct {
 	TXCInterruptCount uint64
 	ledCount          int
 	spiConfig         *machine.SPIConfig
+	eightBit          bool
 }
 
 func NewNeoSpiDriver(cfg *Cfg) *NeoSpiDriver {
 	return &NeoSpiDriver{
+		eightBit:   cfg.EightBit,
 		spi:        cfg.SPI,
 		ledCount:   cfg.LedCount,
 		spaceCount: cfg.SpaceCount,
@@ -51,8 +54,10 @@ func (d *NeoSpiDriver) Init() error {
 	for d.spi.Bus.SYNCBUSY.HasBits(sam.SERCOM_SPIM_SYNCBUSY_ENABLE) {
 	}
 
-	// set 32 bit mode
-	d.spi.Bus.CTRLC.Set(sam.SERCOM_SPIM_CTRLC_DATA32B)
+	if !d.eightBit {
+		// set 32 bit mode
+		d.spi.Bus.CTRLC.Set(sam.SERCOM_SPIM_CTRLC_DATA32B)
+	}
 
 	// Enable SPI port.
 	d.spi.Bus.CTRLA.SetBits(sam.SERCOM_SPIM_CTRLA_ENABLE)
@@ -62,27 +67,64 @@ func (d *NeoSpiDriver) Init() error {
 	d.spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_DRE)
 	d.spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_TXC)
 
-	d.dmaBuf = make([]uint32, neopixel_spi.Bufsize32(d.ledCount))
+	if d.eightBit {
+		d.dmaBuf8 = make([]uint8, neopixel_spi.Bufsize(d.ledCount))
+	} else {
+		d.dmaBuf32 = make([]uint32, neopixel_spi.Bufsize32(d.ledCount))
+	}
 
 	return nil
 }
 
 func (d *NeoSpiDriver) Animate(buf []color.RGBA) {
-	neopixel_spi.ExpandBits32(buf, d.dmaBuf)
+	if d.eightBit {
+		neopixel_spi.ExpandBits(buf, d.dmaBuf8)
+	} else {
+		neopixel_spi.ExpandBits32(buf, d.dmaBuf32)
+	}
 }
 
 func (d *NeoSpiDriver) SpiInterruptHandler(i interrupt.Interrupt) {
+	if d.eightBit {
+		d.handle8()
+	} else {
+		d.handle32()
+	}
+}
+
+func (d *NeoSpiDriver) handle8() {
 	atomic.AddUint64(&d.InterruptCount, 1)
 
 	if d.spacesRemaining > 0 {
 		goto space
 	} else {
-		if d.pos >= len(d.dmaBuf) {
+		if d.pos >= len(d.dmaBuf8) {
 			d.pos = 0
 			d.spacesRemaining = d.spaceCount
 			goto space
 		} else {
-			d.spi.Bus.DATA.Set(uint32(d.dmaBuf[d.pos]))
+			d.spi.Bus.DATA.Set(uint32(d.dmaBuf8[d.pos]))
+			d.pos++
+		}
+	}
+
+space:
+	d.spacesRemaining--
+	d.spi.Bus.DATA.Set(uint32(0))
+}
+
+func (d *NeoSpiDriver) handle32() {
+	atomic.AddUint64(&d.InterruptCount, 1)
+
+	if d.spacesRemaining > 0 {
+		goto space
+	} else {
+		if d.pos >= len(d.dmaBuf32) {
+			d.pos = 0
+			d.spacesRemaining = d.spaceCount
+			goto space
+		} else {
+			d.spi.Bus.DATA.Set(uint32(d.dmaBuf32[d.pos]))
 			d.pos++
 		}
 	}
