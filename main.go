@@ -7,6 +7,9 @@ import (
 	"machine"
 	"time"
 	"tinygo.org/x/drivers/irremote"
+	"uc-go/app/bikelights/cfg"
+	"uc-go/pkg/leds/animations/bounce"
+	"uc-go/pkg/leds/strip"
 	"uc-go/pkg/neopixel-spi/driver"
 	"uc-go/pkg/neopixel-spi/driver/default_driver"
 )
@@ -14,22 +17,17 @@ import (
 // TODO:
 // Try other IR receivers, IR performance
 
-var (
-	r = color.RGBA{0x40, 0, 0, 0}
-	g = color.RGBA{0, 0x40, 0, 0}
-	b = color.RGBA{0, 0, 0x40, 0}
-)
-
 func main() {
-	orig := []color.RGBA{b, g, b, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r}
-	buf := make([]color.RGBA, len(orig))
+	strip1 := strip.NewStrip(cfg.DefaultConfig)
+	b := bounce.Bounce(&bounce.App{Strip: strip1})
+	buf := make([]color.RGBA, cfg.DefaultConfig.NumLeds)
 
 	d := default_driver.Configure(&driver.Cfg{
 		SPI:        &machine.SPI{Bus: sam.SERCOM5_SPIM, SERCOM: 5},
 		SCK:        machine.PA22, // 5.1 (sercom alt)
 		SDO:        machine.PA23, // 5.0 (sercom alt)
 		SDI:        machine.PA20, // 5.2 (sercom alt)
-		LedCount:   len(buf),
+		LedCount:   cfg.DefaultConfig.NumLeds,
 		SpaceCount: 2000,
 	})
 
@@ -50,16 +48,19 @@ func main() {
 	irCount := 0
 
 	frameNo := 0
-	ticker := time.NewTicker(1000 * time.Millisecond)
+	dt := 30 * time.Millisecond
+	ticker := time.NewTicker(dt)
 	for {
 		select {
 		case <-ticker.C:
 			// do the animation
 			frameNo++
-			for i := range orig {
-				i2 := (i + frameNo) % len(buf)
-				buf[i2] = orig[i]
-			}
+			b.Tick(0.0, dt.Seconds())
+			strip1.Each(func(i int, led *strip.Led) {
+				buf[i].R = uint8(255 * led.R)
+				buf[i].G = uint8(255 * led.G)
+				buf[i].B = uint8(255 * led.B)
+			})
 			d.Animate(buf)
 		case data := <-ch:
 			if data.Flags&irremote.DataFlagIsRepeat != 0 {
