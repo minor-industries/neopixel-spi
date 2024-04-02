@@ -22,7 +22,7 @@ func packByte(
 	bitPos int,
 	b byte,
 ) (int, int) {
-	for i := 0; i < 8; i++ {
+	for i := 7; i >= 0; i-- {
 		bit := b&(1<<i) != 0
 		bytePos, bitPos = packBit(out, bytePos, bitPos, bit)
 	}

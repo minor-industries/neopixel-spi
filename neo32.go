@@ -24,7 +24,7 @@ func packByte32(
 	bitPos int,
 	b byte,
 ) (int, int) {
-	for i := 0; i < 8; i++ {
+	for i := 7; i >= 0; i-- {
 		bit := b&(1<<i) != 0
 		outIndex, bitPos = packBit32(out, outIndex, bitPos, bit)
 	}

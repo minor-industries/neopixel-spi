@@ -29,7 +29,7 @@ func main() {
 		SDI:        machine.PA20, // 5.2 (sercom alt)
 		LedCount:   cfg.DefaultConfig.NumLeds,
 		SpaceCount: 2000,
-		EightBit:   true,
+		EightBit:   false,
 	})
 
 	if err := d.Init(); err != nil {
@@ -84,39 +84,53 @@ func animate(
 	frameNo int,
 	t float64,
 ) {
-	//numLEDs := len(buf)
-	//
-	////i := 0
-	//
-	//for j := 0; j < numLEDs; j++ {
-	//	buf[j] = wheel((int32(j)*256/int32(numLEDs) + int32(frameNo)) & 255)
-	//}
-	//
-	//strip1.Each(func(i int, led *strip.Led) {
-	//	buf[i].R = uint8(5 * led.R)
-	//	buf[i].G = uint8(5 * led.G)
-	//	buf[i].B = uint8(5 * led.B)
-	//})
+	buf2 := []color.RGBA{
+		{0, 0xFF, 0, 0},
+		{0, 0, 0, 0},
+		{0, 0xFF, 0, 0},
 
-	for i := range buf {
-		buf[i].R = uint8(i)
-		buf[i].G = 0
-		buf[i].B = 0
+		{0xFF, 0, 0, 0},
+		{0, 0, 0, 0},
+		{0xFF, 0, 0, 0},
+
+		{0, 0, 0xFF, 0},
+		{0, 0, 0, 0},
+		{0, 0, 0xFF, 0},
+
+		{0, 0xFF / 2, 0, 0},
+		{0, 0, 0, 0},
+		{0, 0xFF / 2, 0, 0},
+
+		{0, 0xFF / 4, 0, 0},
+		{0, 0, 0, 0},
+		{0, 0xFF / 4, 0, 0},
+
+		{0, 0xFF / 8, 0, 0},
+		{0, 0, 0, 0},
+		{0, 0xFF / 8, 0, 0},
+
+		{0, 0xFF / 16, 0, 0},
+		{0, 0, 0, 0},
+		{0, 0xFF / 16, 0, 0},
+
+		{0, 0xFF / 32, 0, 0},
+		{0, 0, 0, 0},
+		{0, 0xFF / 32, 0, 0},
+
+		{0, 0xFF / 64, 0, 0},
+		{0, 0, 0, 0},
+		{0, 0xFF / 64, 0, 0},
+
+		{0, 2, 0, 0},
+		{0, 0, 0, 0},
+		{0, 2, 0, 0},
+
+		{0, 1, 0, 0},
+		{0, 0, 0, 0},
+		{0, 1, 0, 0},
 	}
 
-	d.Animate(buf)
-}
-
-func wheel(pos int32) color.RGBA {
-	if pos < 85 {
-		return color.RGBA{uint8(pos * 3), uint8(255 - pos*3), 0, 255}
-	} else if pos < 170 {
-		pos -= 85
-		return color.RGBA{uint8(255 - pos*3), 0, uint8(pos * 3), 255}
-	} else {
-		pos -= 170
-		return color.RGBA{0, uint8(pos * 3), uint8(255 - pos*3), 255}
-	}
+	d.Animate(buf2)
 }
 
 func forever(err error) {
