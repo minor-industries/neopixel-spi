@@ -12,7 +12,7 @@ import (
 	"uc-go/pkg/leds/strip"
 	"uc-go/pkg/neopixel-spi/driver"
 	"uc-go/pkg/neopixel-spi/driver/default_driver"
-	util2 "uc-go/pkg/util"
+	"uc-go/pkg/util"
 )
 
 // TODO:
@@ -90,7 +90,7 @@ func animate(
 
 	convert := func(x float32) uint8 {
 		val := x * scale
-		return uint8(util2.Clamp(0, val, 1.0) * ledMaxLevel * 255.0)
+		return uint8(util.Clamp(0, val, 1.0) * ledMaxLevel * 255.0)
 	}
 
 	strip1.Each(func(i int, led *strip.Led) {
