@@ -2,7 +2,7 @@ package driver
 
 import (
 	"device/sam"
-	neopixel_spi "github.com/minor-industries/neopixel-spi"
+	neopixel_spi "github.com/minor-industries/neopixel-spi/internal/bits"
 	"github.com/pkg/errors"
 	"image/color"
 	"machine"

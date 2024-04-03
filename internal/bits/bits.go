@@ -1,4 +1,4 @@
-package neopixel_spi
+package bits
 
 import (
 	"image/color"
