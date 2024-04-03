@@ -3,8 +3,8 @@ package main
 import (
 	"device/sam"
 	"fmt"
-	"github.com/minor-industries/neopixel-spi/driver"
-	"github.com/minor-industries/neopixel-spi/driver/default_driver"
+	"github.com/minor-industries/neopixel-spi"
+	"github.com/minor-industries/neopixel-spi/default_driver"
 	"image/color"
 	"machine"
 	"math"
@@ -18,7 +18,7 @@ const (
 func main() {
 	buf := make([]color.RGBA, numLeds)
 
-	d := default_driver.Configure(&driver.Cfg{
+	d := default_driver.Configure(&neopixel_spi.Cfg{
 		SPI:        &machine.SPI{Bus: sam.SERCOM5_SPIM, SERCOM: 5},
 		SCK:        machine.PA22, // 5.1 (sercom alt)
 		SDO:        machine.PA23, // 5.0 (sercom alt)
@@ -44,7 +44,7 @@ func main() {
 
 func animate(
 	buf []color.RGBA,
-	d *driver.NeoSpiDriver,
+	d *neopixel_spi.NeoSpiDriver,
 	t float64,
 ) {
 	const ledMaxLevel = 0.5

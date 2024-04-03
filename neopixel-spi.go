@@ -1,4 +1,4 @@
-package driver
+package neopixel_spi
 
 import (
 	"device/sam"
