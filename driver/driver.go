@@ -63,13 +63,13 @@ func (d *NeoSpiDriver) Init() error {
 	d.spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_DRE)
 	d.spi.Bus.INTENSET.Set(sam.SERCOM_SPIM_INTENSET_TXC)
 
-	d.dmaBuf32 = make([]uint32, neopixel_spi.Bufsize32(d.ledCount))
+	d.dmaBuf32 = make([]uint32, neopixel_spi.Bufsize(d.ledCount))
 
 	return nil
 }
 
 func (d *NeoSpiDriver) Animate(buf []color.RGBA) {
-	neopixel_spi.ExpandBits32(buf, d.dmaBuf32)
+	neopixel_spi.ExpandBits(buf, d.dmaBuf32)
 }
 
 func (d *NeoSpiDriver) SpiInterruptHandler(i interrupt.Interrupt) {

@@ -4,21 +4,21 @@ import (
 	"image/color"
 )
 
-func Bufsize32(sz int) int {
+func Bufsize(sz int) int {
 	return (sz*9 + 3) / 4
 }
 
-func ExpandBits32(in []color.RGBA, out []uint32) {
+func ExpandBits(in []color.RGBA, out []uint32) {
 	outIndex := 0
 	bitPos := 0
 	for _, c := range in {
-		outIndex, bitPos = packByte32(out, outIndex, bitPos, c.G)
-		outIndex, bitPos = packByte32(out, outIndex, bitPos, c.R)
-		outIndex, bitPos = packByte32(out, outIndex, bitPos, c.B)
+		outIndex, bitPos = packByte(out, outIndex, bitPos, c.G)
+		outIndex, bitPos = packByte(out, outIndex, bitPos, c.R)
+		outIndex, bitPos = packByte(out, outIndex, bitPos, c.B)
 	}
 }
 
-func packByte32(
+func packByte(
 	out []uint32,
 	outIndex int,
 	bitPos int,
@@ -26,31 +26,31 @@ func packByte32(
 ) (int, int) {
 	for i := 7; i >= 0; i-- {
 		bit := b&(1<<i) != 0
-		outIndex, bitPos = packBit32(out, outIndex, bitPos, bit)
+		outIndex, bitPos = packBit(out, outIndex, bitPos, bit)
 	}
 	return outIndex, bitPos
 }
 
-func packBit32(
+func packBit(
 	out []uint32,
 	outIndex int,
 	bitPos int,
 	bit bool,
 ) (int, int) {
 	if bit {
-		outIndex, bitPos = appendBit32(out, outIndex, bitPos, true)
-		outIndex, bitPos = appendBit32(out, outIndex, bitPos, true)
-		outIndex, bitPos = appendBit32(out, outIndex, bitPos, false)
+		outIndex, bitPos = appendBit(out, outIndex, bitPos, true)
+		outIndex, bitPos = appendBit(out, outIndex, bitPos, true)
+		outIndex, bitPos = appendBit(out, outIndex, bitPos, false)
 	} else {
-		outIndex, bitPos = appendBit32(out, outIndex, bitPos, true)
-		outIndex, bitPos = appendBit32(out, outIndex, bitPos, false)
-		outIndex, bitPos = appendBit32(out, outIndex, bitPos, false)
+		outIndex, bitPos = appendBit(out, outIndex, bitPos, true)
+		outIndex, bitPos = appendBit(out, outIndex, bitPos, false)
+		outIndex, bitPos = appendBit(out, outIndex, bitPos, false)
 	}
 
 	return outIndex, bitPos
 }
 
-func appendBit32(
+func appendBit(
 	out []uint32,
 	outIndex int,
 	bitPos int,
@@ -64,7 +64,6 @@ func appendBit32(
 	if val {
 		out[outIndex] |= 1 << bitPos
 	} else {
-		// let's explicitly clear the bit so we can used a fixed buffer in the future
 		out[outIndex] &= ^(1 << bitPos)
 	}
 
